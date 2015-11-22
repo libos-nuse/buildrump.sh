@@ -69,6 +69,7 @@ helpme ()
 	printf "\t-r: release build (no -g, DIAGNOSTIC, etc.).  default: no\n"
 	printf "\t-D: increase debugginess.  default: -O2 -g\n"
 	printf "\t-k: only kernel (no POSIX hypercalls).  default: all\n"
+	printf "\t-l: build Linux libos.  default: no\n"
 	echo
 	printf "\t-H: ignore diagnostic checks (expert-only).  default: no\n"
 	printf "\t-V: specify -V arguments to NetBSD build (expert-only)\n"
@@ -819,6 +820,28 @@ makebuild ()
 	fi
 }
 
+makelinuxbuild ()
+{
+	echo "=== Linux build LINUX_SRCDIR=${LINUX_SRCDIR} ==="
+	cd ${LINUX_SRCDIR}
+	VERBOSE="V=0"
+	if [ ${NOISE} -gt 1 ] ; then
+		VERBOSE="V=1"
+	fi
+
+	set -e
+	cd tools/lkl
+	rm -f lib/lkl.o lib/liblkl.a
+	make lib/liblkl.a RUMP_PREFIX=${OBJDIR}/dest.stage/ -j ${JNUM} ${VERBOSE}
+	set +e
+}
+
+linuxtest ()
+{
+	printf 'Linux libos test ... '
+	make -C ${LINUX_SRCDIR}/tools/lkl test || die Linux libos failed
+}
+
 makeinstall ()
 {
 
@@ -826,6 +849,11 @@ makeinstall ()
 	# Makefile that could confuse rumpmake
 	stage=$(cd ${BRTOOLDIR} && ${RUMPMAKE} -V '${BUILDRUMP_STAGE}')
 	(cd ${stage}/usr ; tar -cf - .) | (cd ${DESTDIR} ; tar -xf -)
+
+	if ${BUILDLINUX}; then
+		make install DESTDIR=${DESTDIR} -C ${LINUX_SRCDIR}/tools/lkl/
+	fi
+
 }
 
 #
@@ -1338,12 +1366,14 @@ parseargs ()
 	NOISE=2
 	debugginess=0
 	KERNONLY=false
+	BUILDLINUX=false
 	OBJDIR=./obj
 	DESTDIR=./rump
 	SRCDIR=./src
+	LINUX_SRCDIR=./lkl-linux
 	JNUM=4
 
-	while getopts 'd:DhHj:ko:qrs:T:V:F:' opt; do
+	while getopts 'd:DhHj:kl:o:qrs:T:V:F:' opt; do
 		case "$opt" in
 		d)
 			DESTDIR=${OPTARG}
@@ -1404,6 +1434,12 @@ parseargs ()
 		k)
 			KERNONLY=true
 			;;
+		l)
+			BUILDLINUX=true
+			if [ ! -z ${OPTARG} ]; then
+				LINUX_SRCDIR=${OPTARG}
+			fi
+			;;
 		o)
 			OBJDIR=${OPTARG}
 			;;
@@ -1445,8 +1481,11 @@ parseargs ()
 	# Determine what which parts we should execute.
 	#
 	allcmds='checkout checkoutcvs checkoutgit probe tools build install
-	    tests fullbuild kernelheaders'
+	    tests fullbuild kernelheaders linuxbuild'
 	fullbuildcmds="tools build install"
+	if ${BUILDLINUX} ; then
+	    fullbuildcmds="${fullbuildcmds} linuxbuild"
+	fi
 
 	# for compat, so that previously valid invocations don't
 	# produce an error
@@ -1493,6 +1532,10 @@ parseargs ()
 		docheckout=true
 		checkoutstyle=cvs
 	fi
+	if ${docheckout} && ${BUILDLINUX} ; then
+		docheckout=true
+		checkoutstyle=linux-git
+	fi
 
 	# sanity checks
 	if [ ! -z "${TARBALLMODE}" ]; then
@@ -1527,6 +1570,9 @@ resolvepaths ()
 
 	abspath BRTOOLDIR
 	abspath SRCDIR
+	if [ -d ${LINUX_SRCDIR} ] ; then
+	    abspath LINUX_SRCDIR
+	fi
 
 	RUMPMAKE="${BRTOOLDIR}/bin/brrumpmake"
 	BRIMACROS="${BRTOOLDIR}/include/opt_buildrump.h"
@@ -1609,10 +1655,10 @@ done
 
 parseargs "$@"
 
-${docheckout} && { ${BRDIR}/checkout.sh ${checkoutstyle} ${SRCDIR} || exit 1; }
+${docheckout} && { ${BRDIR}/checkout.sh ${checkoutstyle} ${SRCDIR} ${LINUX_SRCDIR} || exit 1; }
 
 if ${doprobe} || ${dotools} || ${dobuild} || ${dokernelheaders} \
-    || ${doinstall} || ${dotests}; then
+    || ${doinstall} || ${dotests} || ${dolinuxbuild}; then
 	${doprobe} || resolvepaths
 
 	evaltoolchain
@@ -1620,10 +1666,13 @@ if ${doprobe} || ${dotools} || ${dobuild} || ${dokernelheaders} \
 
 	${KERNONLY} || evalplatform
 
+	export BUILDLINUX
+	export LINUX_SRCDIR
 	${doprobe} && writeproberes
 	${dotools} && maketools
 	${dobuild} && makebuild
 	${dokernelheaders} && makekernelheaders
+	${dolinuxbuild} && makelinuxbuild
 	${doinstall} && makeinstall
 
 	if ${dotests}; then
@@ -1632,6 +1681,10 @@ if ${doprobe} || ${dotools} || ${dobuild} || ${dokernelheaders} \
 		else
 			. ${BRDIR}/tests/testrump.sh
 			alltests
+		fi
+
+		if ${BUILDLINUX}; then
+			linuxtest
 		fi
 	fi
 fi

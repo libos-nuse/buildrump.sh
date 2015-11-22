@@ -64,6 +64,7 @@ NBSRC_EXTRA_usr=''
 
 GITREPO='https://github.com/rumpkernel/src-netbsd'
 GITREPOPUSH='git@github.com:rumpkernel/src-netbsd'
+GITREPO_LINUX='https://github.com/thehajime/lkl-linux'
 GITREVFILE='.srcgitrev'
 
 checkoutcvs ()
@@ -192,6 +193,37 @@ checkoutgit ()
 	else
 		${GIT} clone -n ${GITREPO} ${SRCDIR} || die Clone failed
 		cd ${SRCDIR}
+	fi
+
+	${GIT} checkout -q ${gitrev} || \
+	    die 'Could not checkout correct git revision. Wrong repo?'
+}
+
+# Check out Linux (LKL) sources.
+LIBOS_REV=rump-hypcall
+checkoutgitlinux ()
+{
+
+	echo ">> Fetching Linux sources to ${LINUX_SRCDIR} using git"
+
+	if [ -e "${LINUX_SRCDIR}" -a ! -e "${LINUX_SRCDIR}/.git" ]; then
+		echo '>>'
+		echo ">> NOTICE: Not a buildrump.sh-based git repo in ${LINUX_SRCDIR}"
+		echo '>> Cannot verify repository version.  Proceeding ...'
+		echo '>>'
+		return 0
+	fi
+
+	gitrev=${LIBOS_REV}
+	[ $? -eq 0 ] || die Cannot determine relevant git revision
+	if [ -e ${LINUX_SRCDIR}/.git ] ; then
+		cd ${LINUX_SRCDIR}
+#		[ -z "$(${GIT} status --porcelain)" ] \
+#		    || die "Cloned repo in ${LINUX_SRCDIR} is not clean, aborting."
+		${GIT} fetch origin rump-hypcall || die Failed to fetch repo
+	else
+		${GIT} clone -n ${GITREPO_LINUX} ${LINUX_SRCDIR} || die Clone failed
+		cd ${LINUX_SRCDIR}
 	fi
 
 	${GIT} checkout -q ${gitrev} || \
@@ -354,6 +386,7 @@ BRDIR=$(dirname $0)
 
 [ $# -lt 2 ] && die Invalid usage.  Run this script via buildrump.sh
 SRCDIR=${2}
+LINUX_SRCDIR=${3}
 
 # default to the most secure source for githubdate
 if [ -z "${BUILDRUMP_CVSROOT}" ]; then
@@ -396,6 +429,13 @@ cvsall)
 git)
 	setgit || die "require working git"
 	checkoutgit
+	echo '>> checkout done'
+	;;
+linux-git)
+	setgit || die "require working git"
+	cd $(dirname $0)
+	checkoutgitlinux
+	cd $(dirname $0)
 	echo '>> checkout done'
 	;;
 githubdate)
