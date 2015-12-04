@@ -831,8 +831,8 @@ makelinuxbuild ()
 
 	set -e
 	cd tools/lkl
-	rm -f lib/lkl.o lib/liblkl.a
-	make lib/liblkl.a RUMP_PREFIX=${OBJDIR}/dest.stage/ -j ${JNUM} ${VERBOSE}
+	rm -f lib/lkl.o lib/liblinux.a lib/liblkl-hijack.so
+	make RUMP_PREFIX=${OBJDIR}/dest.stage/ -j ${JNUM} ${VERBOSE}
 	set +e
 }
 
