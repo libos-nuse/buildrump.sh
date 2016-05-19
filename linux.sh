@@ -66,6 +66,36 @@ maketools ()
 	${HOST_CC} -o ${BRTOOLDIR}/bin/brrealpath \
 	    ${BRDIR}/brlib/utils/realpath.c || die failed to build brrealpath
 
+	cat >> "${MKCONF}" << EOF
+BUILDRUMP_IMACROS=${BRIMACROS}
+.if \${BUILDRUMP_SYSROOT:Uno} == "yes"
+BUILDRUMP_CPPFLAGS=--sysroot=\${BUILDRUMP_STAGE}
+.else
+BUILDRUMP_CPPFLAGS=-I\${BUILDRUMP_STAGE}/usr/include
+.endif
+BUILDRUMP_CPPFLAGS+=${EXTRA_CPPFLAGS}
+LIBDO.pthread=_external
+INSTPRIV=-U
+AFLAGS+=-Wa,--noexecstack
+MKPROFILE=no
+MKARZERO=no
+USE_SSP=no
+MKHTML=no
+MKCATPAGES=yes
+MKNLS=no
+RUMP_NPF_TESTING?=no
+RUMPRUN=yes
+EOF
+
+	if ! ${KERNONLY}; then
+	    # queue.h is not available on all systems, but we need it for
+	    # the hypervisor build.  So, we make it available in tooldir.
+	    mkdir -p ${BRTOOLDIR}/compat/include/sys \
+		|| die create ${BRTOOLDIR}/compat/include/sys
+	    cp -p ${SRCDIR}/sys/sys/queue.h ${BRTOOLDIR}/compat/include/sys
+	    echo "CPPFLAGS+=-I${BRTOOLDIR}/compat/include" >> "${MKCONF}"
+	fi
+
 	printoneconfig 'Cmd' "SRCDIR" "${SRCDIR}"
 	printoneconfig 'Cmd' "DESTDIR" "${DESTDIR}"
 	printoneconfig 'Cmd' "OBJDIR" "${OBJDIR}"
@@ -119,7 +149,7 @@ maketools ()
 	exec 3>&1 1>${BRTOOLDIR}/toolchain-conf.mk
 	printf 'BUILDRUMP_TOOL_CFLAGS=%s\n' "${EXTRA_CFLAGS}"
 	printf 'BUILDRUMP_TOOL_CXXFLAGS=%s\n' "${EXTRA_CFLAGS}"
-	printf 'BUILDRUMP_TOOL_CPPFLAGS=-D__NetBSD__ %s %s\n' \
+	printf 'BUILDRUMP_TOOL_CPPFLAGS=-D__Linux__ %s %s\n' \
 	       "${EXTRA_CPPFLAGS}" "${RUMPKERN_UNDEF}"
 	exec 1>&3 3>&-
 
@@ -154,14 +184,18 @@ makebuild ()
 
 	set -e
 	set -x
+	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump
+	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include
 	mkdir -p ${OBJDIR}/lkl-linux
+
+	make CROSS_COMPILE=${CROSS} ARCH=lkl defconfig ${VERBOSE} O=${OBJDIR}/lkl-linux/
+	make CROSS_COMPILE=${CROSS} ARCH=lkl -j ${JNUM} ${VERBOSE} O=${OBJDIR}/lkl-linux/
 	cd tools/lkl
-	rm -f ${OBJDIR}/lkl-linux/tools/lkl/lib/lkl.o
-	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump # ${OBJDIR}/dest.stage/
-	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include #${OBJDIR}/dest.stage/usr/include
-	make CROSS_COMPILE=${CROSS} rumprun=yes -j ${JNUM} ${VERBOSE} O=${OBJDIR}/lkl-linux/ # FIXME: not supported yet O=${OBJDIR}/lkl-linux/
+#	rm -f ${OBJDIR}/lkl-linux/tools/lkl/lib/lkl.o
+	make CROSS_COMPILE=${CROSS} rumprun=yes -j ${JNUM} ${VERBOSE} O=${OBJDIR}/lkl-linux/
 	cd ../../
 	make CROSS_COMPILE=${CROSS} headers_install ARCH=lkl O=${RROBJ}/rumptools/dest
+
 	set +e
 	set +x
 }
@@ -169,9 +203,14 @@ makebuild ()
 makeinstall ()
 {
 
-	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump # ${OBJDIR}/dest.stage/
-	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include #${OBJDIR}/dest.stage/usr/include
-	make rumprun=yes install DESTDIR=${DESTDIR} -C ${SRCDIR}/tools/lkl/ O=${OBJDIR}/lkl-linux/
+	# XXX for app-tools
+	mkdir -p ${DESTDIR}/bin/
+	# XXX: RROBJ is rumprun obj so, should not be used in buildrump...
+	mkdir -p ${RROBJ}/rumptools/dest/usr/include/rumprun
+
+	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump
+	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include
+	make rumprun=yes libraries_install DESTDIR=${RROBJ}/rumptools/dest -C ${SRCDIR}/tools/lkl/ O=${OBJDIR}/lkl-linux/
 
 }
 
