@@ -12,7 +12,7 @@ checkcheckout ()
 	fi
 }
 
-maketools ()
+maketools_ ()
 {
 
 	checkcheckout

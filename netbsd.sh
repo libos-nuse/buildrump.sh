@@ -25,7 +25,7 @@ checkcheckout ()
 # external toolchain links are created in the format that
 # build.sh expects.
 #
-maketools ()
+maketools_nb ()
 {
 
 	checkcheckout
