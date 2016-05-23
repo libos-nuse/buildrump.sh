@@ -582,8 +582,8 @@ EOF
 		appendmkconf Cmd yes RUMPKERN_ONLY
 	fi
 
-	if ${KERNONLY} && ! cppdefines __NetBSD__; then
-		appendmkconf 'Cmd' '-D__NetBSD__' 'CPPFLAGS' +
+	if ${KERNONLY} && ! cppdefines ${RUMPKERN_CPPFLAGS}; then
+		appendmkconf 'Cmd' "${RUMPKERN_CPPFLAGS}" 'CPPFLAGS' +
 		appendmkconf 'Probe' "${RUMPKERN_UNDEF}" 'CPPFLAGS' +
 	else
 		appendmkconf 'Probe' "${RUMPKERN_UNDEF}" "RUMPKERN_UNDEF"
@@ -620,8 +620,8 @@ EOF
 	exec 3>&1 1>${BRTOOLDIR}/toolchain-conf.mk
 	printf 'BUILDRUMP_TOOL_CFLAGS=%s\n' "${EXTRA_CFLAGS}"
 	printf 'BUILDRUMP_TOOL_CXXFLAGS=%s\n' "${EXTRA_CFLAGS}"
-	printf 'BUILDRUMP_TOOL_CPPFLAGS=-D__NetBSD__ %s %s\n' \
-	    "${EXTRA_CPPFLAGS}" "${RUMPKERN_UNDEF}"
+	printf 'BUILDRUMP_TOOL_CPPFLAGS=%s %s %s\n' \
+	    "${RUMPKERN_CPPFLAGS}" "${EXTRA_CPPFLAGS}" "${RUMPKERN_UNDEF}"
 	exec 1>&3 3>&-
 
 	chkcrt begins
@@ -899,7 +899,9 @@ evaltoolchain ()
 
 	case ${CC_TARGET} in
 	*-linux*)
-		RUMPKERN_UNDEF='-Ulinux -U__linux -U__linux__ -U__gnu_linux__'
+		if [ ${RUMPKERNEL} != "linux" ]; then
+			RUMPKERN_UNDEF='-Ulinux -U__linux -U__linux__ -U__gnu_linux__'
+		fi
 		cppdefines _BIG_ENDIAN \
 		    && appendvar RUMPKERN_UNDEF -U_BIG_ENDIAN
 		cppdefines _LITTLE_ENDIAN \
