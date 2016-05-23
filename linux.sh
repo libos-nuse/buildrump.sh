@@ -1,12 +1,12 @@
 checkcheckout ()
 {
 
-	[ -f "${SRCDIR}/arch/lkl/Makefile" ] || \
-	    die "Cannot find ${SRCDIR}/arch/lkl/Makefile!"
+	[ -f "${LKLSRC}/arch/lkl/Makefile" ] || \
+	    die "Cannot find ${LKLSRC}/arch/lkl/Makefile!"
 
 	[ ! -z "${TARBALLMODE}" ] && return
 
-	if ! ${BRDIR}/checkout.sh checkcheckout ${SRCDIR} \
+	if ! ${BRDIR}/checkout.sh checkcheckout ${LKLSRC} \
 	    && ! ${TITANMODE}; then
 		die 'revision mismatch, run checkout (or -H to override)'
 	fi
@@ -154,7 +154,7 @@ EOF
 	exec 1>&3 3>&-
 
 	# XXX: make rumpmake from src-netbsd
-	cd ${SRCDIR}/../src-netbsd
+	cd ${SRCDIR}
 	# create user-usable wrapper script
 	makemake ${BRTOOLDIR}/rumpmake ${BRTOOLDIR}/dest makewrapper
 
@@ -167,8 +167,8 @@ EOF
 
 makebuild ()
 {
-	echo "=== Linux build SRCDIR=${SRCDIR} ==="
-	cd ${SRCDIR}
+	echo "=== Linux build LKLSRC=${LKLSRC} ==="
+	cd ${LKLSRC}
 	VERBOSE="V=0"
 	if [ ${NOISE} -gt 1 ] ; then
 		VERBOSE="V=1"
@@ -184,8 +184,8 @@ makebuild ()
 
 	set -e
 	set -x
-	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump
-	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include
+	export RUMP_PREFIX=${RUMPSRC}/sys/rump
+	export RUMP_INCLUDE=${RUMPSRC}/sys/rump/include
 	mkdir -p ${OBJDIR}/lkl-linux
 
 	cd tools/lkl
@@ -207,9 +207,10 @@ makeinstall ()
 	# XXX: RROBJ is rumprun obj so, should not be used in buildrump...
 	mkdir -p ${RROBJ}/rumptools/dest/usr/include/rumprun
 
-	export RUMP_PREFIX=${RUMPSRC}/../src-netbsd/sys/rump
-	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include
-	make rumprun=yes libraries_install DESTDIR=${RROBJ}/rumptools/dest -C ${SRCDIR}/tools/lkl/ O=${OBJDIR}/lkl-linux/
+	export RUMP_PREFIX=${RUMPSRC}/sys/rump
+	export RUMP_INCLUDE=${RUMPSRC}/sys/rump/include
+	make rumprun=yes headers_install libraries_install DESTDIR=${RROBJ}/rumptools/dest\
+	     -C ${LKLSRC}/tools/lkl/ O=${OBJDIR}/lkl-linux/
 
 }
 
@@ -226,6 +227,6 @@ makekernelheaders ()
 maketests ()
 {
 	printf 'Linux libos test ... '
-	make -C ${SRCDIR}/tools/lkl test || die Linux libos failed
+	make -C ${LKLSRC}/tools/lkl test || die Linux libos failed
 }
 
