@@ -188,11 +188,10 @@ makebuild ()
 	export RUMP_INCLUDE=${RUMPSRC}/../src-netbsd/sys/rump/include
 	mkdir -p ${OBJDIR}/lkl-linux
 
-	make CROSS_COMPILE=${CROSS} ARCH=lkl defconfig ${VERBOSE} O=${OBJDIR}/lkl-linux/
-	make CROSS_COMPILE=${CROSS} ARCH=lkl -j ${JNUM} ${VERBOSE} O=${OBJDIR}/lkl-linux/
 	cd tools/lkl
-#	rm -f ${OBJDIR}/lkl-linux/tools/lkl/lib/lkl.o
+	rm -f ${OBJDIR}/lkl-linux/tools/lkl/lib/lkl.o
 	make CROSS_COMPILE=${CROSS} rumprun=yes -j ${JNUM} ${VERBOSE} O=${OBJDIR}/lkl-linux/
+
 	cd ../../
 	make CROSS_COMPILE=${CROSS} headers_install ARCH=lkl O=${RROBJ}/rumptools/dest
 
