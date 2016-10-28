@@ -232,7 +232,7 @@ rump_netconfig_ipv4_ifaddr_cidr(const char *ifname, const char *addr,
 
 	if (mask < 0 || mask > 32)
 		return EINVAL;
-	return cfg_ipv4(ifname, addr, htonl(~0<<(32-mask)));
+	return cfg_ipv4(ifname, addr, htonl(~0U<<(32-mask)));
 }
 
 int
@@ -439,7 +439,14 @@ rump_netconfig_auto_ipv6(const char *ifname)
 	m_outbuf = m_gethdr(M_WAIT, MT_DATA);
 	m_clget(m_outbuf, M_WAIT);
 	m_outbuf->m_pkthdr.len = m_outbuf->m_len = rslen;
+
+
+#if __NetBSD_Prereq__(7,99,31)
+	m_set_rcvif(m_outbuf, NULL);
+#else
 	m_outbuf->m_pkthdr.rcvif = NULL;
+#endif
+
 #undef rslen
 	buf = mtod(m_outbuf, char *);
 	memset(&rs, 0, sizeof rs);
