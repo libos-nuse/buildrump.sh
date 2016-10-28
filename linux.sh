@@ -44,7 +44,6 @@ makebuild ()
 	cd ../../
 	make CROSS_COMPILE=${CROSS} headers_install ARCH=lkl O=${RROBJ}/rumptools/dest
 
-	set +e
 	set +x
 }
 

@@ -430,7 +430,6 @@ maketoolwrapper ()
 		lcx=$(echo ${tool} | tr '[A-Z]' '[a-z]')
 	fi
 	tname=${BRTOOLDIR}/bin/${MACHINE_GNU_ARCH}--netbsd${TOOLABI}-${lcx}
-#	tname=${BRTOOLDIR}/bin/${MACHINE_GNU_ARCH}--${RUMPKERNEL}${TOOLABI}-${lcx}
 
 	printoneconfig 'Tool' "${tool}" "${fptool}"
 
@@ -544,6 +543,7 @@ int main() {gzopen(NULL, NULL); return 0;}' -lz \
 	else
 		cppname=cpp
 	fi
+	# NB: we need rumpmake to build libbmk_*, but rumpmake needs --netbsd TOOLTUPLES
 	tname=${BRTOOLDIR}/bin/${MACHINE_GNU_ARCH}--netbsd${TOOLABI}-${cppname}
 	printf '#!/bin/sh\n\nexec %s -E -x c "${@}"\n' ${CC} > ${tname}
 	chmod 755 ${tname}
