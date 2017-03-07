@@ -1,4 +1,4 @@
-RUMPKERN_CPPFLAGS="-D__linux__"
+RUMPKERN_CPPFLAGS="-D__linux__ -DCONFIG_LKL"
 
 checkcheckout ()
 {
@@ -76,7 +76,7 @@ makekernelheaders ()
 
 maketests ()
 {
-	printf 'Linux libos test ... '
-	make -C ${LKLSRC}/tools/lkl test || die Linux libos failed
+	printf 'Linux test ... '
+	make -C ${LKLSRC}/tools/lkl test || die LKL test failed
 }
 
