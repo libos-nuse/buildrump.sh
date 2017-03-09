@@ -1234,6 +1234,7 @@ parseargs ()
 	OBJDIR=./obj
 	DESTDIR=./rump
 	SRCDIR=./src
+	LKL_SRCDIR=./linux
 	JNUM=4
 
 	while getopts 'd:DhHj:kl:o:qrs:T:V:F:' opt; do

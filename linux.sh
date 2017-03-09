@@ -1,5 +1,4 @@
 RUMPKERN_CPPFLAGS="-D__linux__ -DCONFIG_LKL"
-export LKL_SRCDIR=linux
 
 checkcheckout ()
 {
