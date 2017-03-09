@@ -1436,7 +1436,7 @@ resolvepaths ()
 
 	abspath BRTOOLDIR
 	abspath SRCDIR
-	[ ${RUMPKERNEL} == "linux" ] && abspath LKL_SRCDIR
+	[ "${RUMPKERNEL}" = "linux" ] && abspath LKL_SRCDIR
 
 	RUMPMAKE="${BRTOOLDIR}/bin/brrumpmake"
 	BRIMACROS="${BRTOOLDIR}/include/opt_buildrump.h"
