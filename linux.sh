@@ -35,14 +35,14 @@ makebuild ()
 	set -x
 	export RUMP_PREFIX=${SRCDIR}/sys/rump
 	export RUMP_INCLUDE=${SRCDIR}/sys/rump/include
-	mkdir -p ${OBJDIR}/${LKL_SRCDIR}
+	mkdir -p ${OBJDIR}/linux
 
 	cd tools/lkl
-	rm -f ${OBJDIR}/${LKL_SRCDIR}/tools/lkl/lib/lkl.o
-	make CROSS_COMPILE=${CROSS} rumprun=yes -j ${JNUM} ${VERBOSE} O=${OBJDIR}/${LKL_SRCDIR}
+	rm -f ${OBJDIR}/linux/tools/lkl/lib/lkl.o
+	make CROSS_COMPILE=${CROSS} rumprun=yes -j ${JNUM} ${VERBOSE} O=${OBJDIR}/linux
 
 	cd ../../
-	make CROSS_COMPILE=${CROSS} headers_install ARCH=lkl O=${OBJDIR}/rumptools/dest
+	make CROSS_COMPILE=${CROSS} headers_install ARCH=lkl O=${DESTDIR}/ PREFIX=/
 
 	set +x
 }
@@ -52,12 +52,12 @@ makeinstall ()
 
 	# XXX for app-tools
 	mkdir -p ${DESTDIR}/bin/
-	mkdir -p ${OBJDIR}/rumptools/dest/usr/include/rumprun
+	mkdir -p ${DESTDIR}/include/rumprun
 
 	export RUMP_PREFIX=${SRCDIR}/sys/rump
 	export RUMP_INCLUDE=${SRCDIR}/sys/rump/include
-	make rumprun=yes headers_install libraries_install DESTDIR=${OBJDIR}/rumptools/dest\
-	     -C ${LKL_SRCDIR}/tools/lkl/ O=${OBJDIR}/${LKL_SRCDIR}
+	make rumprun=yes headers_install libraries_install DESTDIR=${DESTDIR}\
+	     -C ${LKL_SRCDIR}/tools/lkl/ O=${OBJDIR}/linux  PREFIX=/
 	# XXX: for netconfig.h
 	mkdir -p ${DESTDIR}/include/rump/
 	cp -pf ${BRDIR}/brlib/libnetconfig/rump/netconfig.h ${DESTDIR}/include/rump/
@@ -78,6 +78,6 @@ maketests ()
 	printf 'SKIP: Linux test currently not implemented yet ... \n'
 	return
 	printf 'Linux test ... \n'
-	make -C ${LKL_SRCDIR}/tools/lkl test O=${OBJDIR}/${LKL_SRCDIR} || die LKL test failed
+	make -C ${LKL_SRCDIR}/tools/lkl test O=${OBJDIR}/linux || die LKL test failed
 }
 
