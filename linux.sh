@@ -57,7 +57,7 @@ makeinstall ()
 	export RUMP_PREFIX=${SRCDIR}/sys/rump
 	export RUMP_INCLUDE=${SRCDIR}/sys/rump/include
 	make rumprun=yes headers_install libraries_install DESTDIR=${DESTDIR}\
-	     -C ${LKL_SRCDIR}/tools/lkl/ O=${OBJDIR}/linux  PREFIX=/
+	     -C ./tools/lkl/ O=${OBJDIR}/linux  PREFIX=/
 	# XXX: for netconfig.h
 	mkdir -p ${DESTDIR}/include/rump/
 	cp -pf ${BRDIR}/brlib/libnetconfig/rump/netconfig.h ${DESTDIR}/include/rump/
