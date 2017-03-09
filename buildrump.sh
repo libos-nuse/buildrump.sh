@@ -1397,7 +1397,7 @@ parseargs ()
 		docheckout=true
 		checkoutstyle=cvs
 	fi
-	if ${docheckout} && ${RUMPKERNEL} = "linux" ; then
+	if ${docheckout} && [ ${RUMPKERNEL} = "linux" ] ; then
 		docheckout=true
 		checkoutstyle=linux-git
 	fi
@@ -1435,6 +1435,7 @@ resolvepaths ()
 
 	abspath BRTOOLDIR
 	abspath SRCDIR
+	abspath LKL_SRCDIR
 
 	RUMPMAKE="${BRTOOLDIR}/bin/brrumpmake"
 	BRIMACROS="${BRTOOLDIR}/include/opt_buildrump.h"
@@ -1484,7 +1485,7 @@ done
 
 parseargs "$@"
 
-${docheckout} && { ${BRDIR}/checkout.sh ${checkoutstyle} ${SRCDIR} || exit 1; }
+${docheckout} && { ${BRDIR}/checkout.sh ${checkoutstyle} ${SRCDIR} ${LKL_SRCDIR} || exit 1; }
 
 if ${doprobe} || ${dotools} || ${dobuild} || ${dokernelheaders} \
     || ${doinstall} || ${dotests}; then

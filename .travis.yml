@@ -23,7 +23,7 @@ env:
   - NAME='debug' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='-DDD' TESTS='tests'
   - NAME='release' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='-r' TESTS='tests'
   - NAME='fibers' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='-V RUMPUSER_THREADS=fiber -V RUMP_CURLWP=hypercall' TESTS=''
-  - NAME='dynamic' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='' TESTS='tests' RUMPKERNEL='-l linux'
+  - NAME='dynamic' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='' TESTS='' RUMPKERNEL='-l linux'
   - NAME='fibers' LIBTYPE='MKSTATICLIB=no' BUILDTYPE='-V RUMPUSER_THREADS=fiber -V RUMP_CURLWP=hypercall' TESTS='' RUMPKERNEL='-l linux'
 
 script:

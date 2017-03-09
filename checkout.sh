@@ -200,7 +200,7 @@ checkoutgit ()
 }
 
 # Check out Linux (LKL) sources.
-LKL_REV=rump-hypcall
+LKL_REV=rump-hypcall-upstream
 checkoutgitlinux ()
 {
 
@@ -220,7 +220,7 @@ checkoutgitlinux ()
 		cd ${LKL_SRCDIR}
 #		[ -z "$(${GIT} status --porcelain)" ] \
 #		    || die "Cloned repo in ${LKL_SRCDIR} is not clean, aborting."
-		${GIT} fetch origin rump-hypcall || die Failed to fetch repo
+		${GIT} fetch origin ${LKL_REV} || die Failed to fetch repo
 	else
 		${GIT} clone -n ${GITREPO_LKL} ${LKL_SRCDIR} || die Clone failed
 		cd ${LKL_SRCDIR}
@@ -433,9 +433,12 @@ git)
 	;;
 linux-git)
 	setgit || die "require working git"
-	cd $(dirname $0)
+	curdir="$(pwd)"
+	# XXX: currently linux build requires src-netbsd
+	checkoutgit
+	cd "${curdir}"
 	checkoutgitlinux
-	cd $(dirname $0)
+	cd "${curdir}"
 	echo '>> checkout done'
 	;;
 githubdate)
