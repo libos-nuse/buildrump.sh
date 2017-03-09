@@ -3,12 +3,12 @@ RUMPKERN_CPPFLAGS="-D__linux__ -DCONFIG_LKL"
 checkcheckout ()
 {
 
-	[ -f "${LKLSRC}/arch/lkl/Makefile" ] || \
-	    die "Cannot find ${LKLSRC}/arch/lkl/Makefile!"
+	[ -f "${LKL_SRCDIR}/arch/lkl/Makefile" ] || \
+	    die "Cannot find ${LKL_SRCDIR}/arch/lkl/Makefile!"
 
 	[ ! -z "${TARBALLMODE}" ] && return
 
-	if ! ${BRDIR}/checkout.sh checkcheckout ${LKLSRC} \
+	if ! ${BRDIR}/checkout.sh checkcheckout ${LKL_SRCDIR} \
 	    && ! ${TITANMODE}; then
 		die 'revision mismatch, run checkout (or -H to override)'
 	fi
@@ -16,8 +16,8 @@ checkcheckout ()
 
 makebuild ()
 {
-	echo "=== Linux build LKLSRC=${LKLSRC} ==="
-	cd ${LKLSRC}
+	echo "=== Linux build LKLSRC=${LKL_SRCDIR} ==="
+	cd ${LKL_SRCDIR}
 	VERBOSE="V=0"
 	if [ ${NOISE} -gt 1 ] ; then
 		VERBOSE="V=1"
@@ -58,7 +58,7 @@ makeinstall ()
 	export RUMP_PREFIX=${RUMPSRC}/sys/rump
 	export RUMP_INCLUDE=${RUMPSRC}/sys/rump/include
 	make rumprun=yes headers_install libraries_install DESTDIR=${RROBJ}/rumptools/dest\
-	     -C ${LKLSRC}/tools/lkl/ O=${OBJDIR}/lkl-linux/
+	     -C ${LKL_SRCDIR}/tools/lkl/ O=${OBJDIR}/lkl-linux/
 	# XXX: for netconfig.h
 	mkdir -p ${DESTDIR}/include/rump/
 	cp -pf ${BRDIR}/brlib/libnetconfig/rump/netconfig.h ${DESTDIR}/include/rump/
@@ -77,6 +77,6 @@ makekernelheaders ()
 maketests ()
 {
 	printf 'Linux test ... '
-	make -C ${LKLSRC}/tools/lkl test || die LKL test failed
+	make -C ${LKL_SRCDIR}/tools/lkl test || die LKL test failed
 }
 
